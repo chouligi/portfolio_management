@@ -7,8 +7,6 @@ import pandas as pd
 import scipy.optimize as sco
 import seaborn as sns
 
-# from .data_inspection_utils import compute_covariance_matrix
-
 """
 Credits: https://github.com/tthustla/efficient_frontier/blob/master/Efficient%20_Frontier_implementation.ipynb
 """
