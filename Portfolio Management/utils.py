@@ -1,9 +1,16 @@
-from typing import List, Tuple
+import os
+from typing import List, Tuple, Union
 
 import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
+import pandas as pd
+import scipy.optimize as sco
 import seaborn as sns
+
+"""
+Credits: https://github.com/tthustla/efficient_frontier/blob/master/Efficient%20_Frontier_implementation.ipynb
+"""
+
 
 def compute_change(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
@@ -30,6 +37,7 @@ def compute_change(dataframe: pd.DataFrame) -> pd.DataFrame:
 
 def compute_perc_change(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
+    Computes the percentage change in the price
 
     :param dataframe: pandas DataFrame, the dataframe with the Index data
     :return: pandas Dataframe, dataframe with computed percentage change
@@ -45,6 +53,8 @@ def compute_perc_change(dataframe: pd.DataFrame) -> pd.DataFrame:
 def apply_perc_change(portfolio: List[pd.DataFrame]) -> List[pd.DataFrame]:
     """
 
+    Applies the computation of the percentage change
+
     :param portfolio: List, List of dataframes with the Index data
     :return: portfolio: List, List of datafarames with applied percentage change
     """
@@ -55,7 +65,8 @@ def apply_perc_change(portfolio: List[pd.DataFrame]) -> List[pd.DataFrame]:
     return portfolio
 
 
-def construct_portfolio_dictionary(dataframes_list: List[pd.DataFrame], names: List[str], weights: List[float],
+def construct_portfolio_dictionary(dataframes_list: List[pd.DataFrame], names: List[str],
+                                   weights: Union[float, np.array],
                                    description: List[str]) -> dict:
     """
     Creates dictionary with the Index data, their names, their description and weights
@@ -227,7 +238,14 @@ def compute_covariance_matrix(list_df: List[pd.DataFrame]) -> np.array:
     return covMatrix
 
 
-def plot_correlation_matrix(list_df, names):
+def plot_correlation_matrix(list_df: List[pd.DataFrame], names: List[str]) -> None:
+    """
+    Plots the correlation matrix
+
+    :param list_df: List of pandas DataFrames, the index data
+    :param names: names: List, List of strings with the Index names
+    :return: None
+    """
     corr = compute_correlation_matrix(list_df)
 
     corrMatrix = pd.DataFrame(corr, columns=names, index=names)
@@ -242,7 +260,14 @@ def plot_correlation_matrix(list_df, names):
     plt.show()
 
 
-def plot_covariance_matrix(list_df, names):
+def plot_covariance_matrix(list_df: List[pd.DataFrame], names: List[str]) -> None:
+    """
+    Plots the covariance matrix
+
+    :param list_df: List of pandas DataFrames, the index data
+    :param names: names: List, List of strings with the Index names
+    :return: None
+    """
     cov = compute_covariance_matrix(list_df)
 
     covMatrix = pd.DataFrame(cov, columns=names, index=names)
@@ -257,7 +282,13 @@ def plot_covariance_matrix(list_df, names):
     plt.show()
 
 
-def compute_mean_daily_returns(portfolio_dictionary):
+def compute_mean_daily_returns(portfolio_dictionary: dict) -> List[float]:
+    """
+    Computes mean daily returns of the Indices
+
+    :param portfolio_dictionary: dictionary, the dictionary with the Index data
+    :return: List[float], list with the mean daily returns of each Index
+    """
     intersected = intersect_dataframes(portfolio_dictionary['frames'])
     # Compute mean daily return per ETF
     mean_daily_returns = []
@@ -267,8 +298,17 @@ def compute_mean_daily_returns(portfolio_dictionary):
     return mean_daily_returns
 
 
-def compute_annualized_returns_no_intersection(portfolio_dictionary):
-    # Compute mean daily return per ETF, using all the years
+def compute_annualized_returns_no_intersection(portfolio_dictionary: dict) -> float:
+    """
+    Computes the annualized returns of the portfolio without intersecting the dataframes (using all the available data
+    per index)
+         WARNING: Since the returns are computed using different time periods for each Index, this number should not be
+    used for any decision, if the date ranges have large discrepancies.
+
+
+    :param portfolio_dictionary: dictionary, the dictionary with the Index data
+    :return: float, the annualized return of the portfolio
+    """
     mean_daily_returns = []
     for df in portfolio_dictionary['frames']:
         mean_daily_returns.append(df['perc_change'].mean())
@@ -280,7 +320,13 @@ def compute_annualized_returns_no_intersection(portfolio_dictionary):
     return portfolio_returns
 
 
-def portfolio_annualised_performance(portfolio_dictionary):
+def portfolio_annualised_performance(portfolio_dictionary: dict) -> Tuple[float, float]:
+    """
+    Computes the annualized risk and return of a portfolio
+
+    :param portfolio_dictionary: dictionary, the dictionary with the Index data
+    :return: Tuple[float, float], the return and the risk (standard deviation) of the portfolio
+    """
     cov_matrix = compute_covariance_matrix(portfolio_dictionary['frames'])
 
     weights = np.array(portfolio_dictionary['weights'])
@@ -294,7 +340,19 @@ def portfolio_annualised_performance(portfolio_dictionary):
     return portfolio_returns, portfolio_std
 
 
-def random_portfolios(num_portfolios, portfolio, names, risk_free_rate, description):
+def random_portfolios(num_portfolios: int, portfolio: List[pd.DataFrame], names: List[str], risk_free_rate: float,
+                      description: List[str]) -> Tuple[np.array, np.array]:
+    """
+    Creates random portfolios, with random allocations
+
+    :param num_portfolios: int, the number of the portfolios
+    :param portfolio: List[pd.DataFrame]: List of the Index data
+    :param names: List[str], List of the names of the Indices
+    :param risk_free_rate: float, the risk free rate
+     (see: https://www.treasury.gov/resource-center/data-chart-center/interest-rates/Pages/TextView.aspx?data=billrates)
+    :param description: List[str], List of the description of the Indices
+    :return: Tuple [np.array, np.array], Tuple of the results and weights of each portfolio
+    """
     for idx in range(len(portfolio)):
         portfolio[idx] = compute_perc_change(portfolio[idx])
 
@@ -321,7 +379,21 @@ def random_portfolios(num_portfolios, portfolio, names, risk_free_rate, descript
     return results, weights_record
 
 
-def display_simulated_ef_with_random(portfolio, names, num_portfolios, risk_free_rate, description):
+def display_simulated_ef_with_random(portfolio: List[pd.DataFrame], names: List[str], num_portfolios: int,
+                                     risk_free_rate: float, description: List[str],
+                                     directory: str = 'figures/') -> None:
+    """
+    Displays and stores simulated efficient frontier using random portfolios
+
+    :param portfolio: List[pd.DataFrame]: List of the Index data
+    :param names: List[str], List of the names of the Indices
+    :param num_portfolios: int, the number of the portfolios
+    :param risk_free_rate: float, the risk free rate
+     (see: https://www.treasury.gov/resource-center/data-chart-center/interest-rates/Pages/TextView.aspx?data=billrates)
+    :param description: List[str], List of the description of the Indices
+    :param directory: str, the directory with the figures
+    :return:
+    """
     results, weights = random_portfolios(num_portfolios, portfolio, names, risk_free_rate, description)
 
     max_sharpe_idx = np.argmax(results[2])
@@ -361,30 +433,55 @@ def display_simulated_ef_with_random(portfolio, names, num_portfolios, risk_free
     plt.ylabel('Annualised returns', size=20)
     plt.legend(labelspacing=0.8)
 
-    plt.savefig(f'figures/efficient_frontier_{num_portfolios}_portfolios.png', dpi=250)
-    plt.show();
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
-def neg_sharpe_ratio(weights, portfolio, names, risk_free_rate):
+    plt.savefig(f'{directory}efficient_frontier_{num_portfolios}_portfolios.png', dpi=250)
+
+    plt.show()
+
+
+def neg_sharpe_ratio(weights: List[float], portfolio: List[pd.DataFrame], names: List[str],
+                     risk_free_rate: float) -> float:
     """
     Computes the negative sharpe ratio
+
+    :param weights: List[float], List with the allocation weights
+    :param portfolio: List[pd.DataFrame], List of the Index data
+    :param names: List[str], List of the names of the Indices
+    :param risk_free_rate: float, the risk free rate
+    :return: float, the negative sharpe ratio
     """
 
     portfolio_dictionary = construct_portfolio_dictionary(portfolio, names, weights, ["NA"])
     p_ret, p_std = portfolio_annualised_performance(portfolio_dictionary)
     return -(p_ret - risk_free_rate) / p_std
 
-def portfolio_volatility(weights, portfolio, names):
+
+def portfolio_volatility(weights: List[float], portfolio: List[pd.DataFrame], names: List[str]) -> float:
     """
-    Computes the portfolio's volatility
+    Computes the portfolio's volatility (standard deviation)
+
+    :param weights: List[float], List with the allocation weights
+    :param portfolio: List[pd.DataFrame], List of the Index data
+    :param names: List[str], List of the names of the Indices
+    :return:
     """
 
     portfolio_dictionary = construct_portfolio_dictionary(portfolio, names, weights, ["NA"])
     p_ret, p_std = portfolio_annualised_performance(portfolio_dictionary)
     return p_std
 
-def max_sharpe_ratio(portfolio, names, risk_free_rate):
+
+def max_sharpe_ratio(portfolio: List[pd.DataFrame], names: List[str],
+                     risk_free_rate: float) -> sco.optimize.OptimizeResult:
     """
-    Maximizes the sharpe ratio
+        Maximizes the sharpe ratio
+
+    :param portfolio: List[pd.DataFrame], List of the Index data
+    :param names: List[str], List of the names of the Indices
+    :param risk_free_rate: float, the risk free rate
+    :return: float, the maximum
     """
 
     num_assets = len(portfolio)
@@ -397,9 +494,15 @@ def max_sharpe_ratio(portfolio, names, risk_free_rate):
 
     return result
 
-def min_variance(portfolio, names):
+
+def min_variance(portfolio: List[pd.DataFrame], names: List[str]) -> sco.optimize.OptimizeResult:
     """
-    Minimizes the variance
+        Minimizes the variance
+
+
+    :param portfolio: List[pd.DataFrame], List of the Index data
+    :param names: List[str], List of the names of the Indices
+    :return:
     """
 
     num_assets = len(portfolio)
