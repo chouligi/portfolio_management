@@ -7,9 +7,45 @@ import pandas as pd
 import scipy.optimize as sco
 import seaborn as sns
 
+# from .data_inspection_utils import compute_covariance_matrix
+
 """
 Credits: https://github.com/tthustla/efficient_frontier/blob/master/Efficient%20_Frontier_implementation.ipynb
 """
+
+plt.rcParams["figure.figsize"] = (15.0, 8.0)
+
+#  Set font sizes
+SMALL_SIZE = 20
+MEDIUM_SIZE = 23
+BIGGER_SIZE = 25
+
+plt.rc('font', size=SMALL_SIZE)  # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)  # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)  # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)  # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+
+sns.set_style('whitegrid')
+
+plt.style.use('fivethirtyeight')
+
+
+def apply_perc_change(portfolio: List[pd.DataFrame]) -> List[pd.DataFrame]:
+    """
+
+    Applies the computation of the percentage change
+
+    :param portfolio: List, List of dataframes with the Index data
+    :return: portfolio: List, List of datafarames with applied percentage change
+    """
+    for idx in range(len(portfolio)):
+        portfolio[idx] = compute_change(portfolio[idx])
+        portfolio[idx] = compute_perc_change(portfolio[idx])
+
+    return portfolio
 
 
 def compute_change(dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -50,21 +86,6 @@ def compute_perc_change(dataframe: pd.DataFrame) -> pd.DataFrame:
     return dataframe
 
 
-def apply_perc_change(portfolio: List[pd.DataFrame]) -> List[pd.DataFrame]:
-    """
-
-    Applies the computation of the percentage change
-
-    :param portfolio: List, List of dataframes with the Index data
-    :return: portfolio: List, List of datafarames with applied percentage change
-    """
-    for idx in range(len(portfolio)):
-        portfolio[idx] = compute_change(portfolio[idx])
-        portfolio[idx] = compute_perc_change(portfolio[idx])
-
-    return portfolio
-
-
 def construct_portfolio_dictionary(dataframes_list: List[pd.DataFrame], names: List[str],
                                    weights: Union[float, np.array],
                                    description: List[str]) -> dict:
@@ -83,48 +104,6 @@ def construct_portfolio_dictionary(dataframes_list: List[pd.DataFrame], names: L
                       'description': description}
 
     return portfolio_dict
-
-
-def print_length(name: str, dataframe: pd.DataFrame) -> None:
-    """
-    Prints the length of the Index dataframe
-
-    :param name: str, the name of the Index
-    :param dataframe: pandas Dataframe, the dataframe with the index data
-    :return: None
-    """
-    print(f'Number of days in "{name}" is {len(dataframe)}')
-
-
-def print_date_range(name: str, dataframe: pd.DataFrame) -> None:
-    """
-    Prints the date range of the Index data
-
-    :param name: str, the name of the Index
-    :param dataframe: pandas Dataframe, the dataframe with the index data
-    :return: None
-    """
-    print(f'Date range for "{name}" is from {str(dataframe["Date"].min())}' + f' to {str(dataframe["Date"].max())}')
-
-
-def plot_ts(dataframe: pd.DataFrame, index: int) -> None:
-    """
-    Plots the timeseries of an Index
-    :param dataframe: pandas Dataframe, the dataframe with the index data
-    :param index: int, the index of the dictionary
-    :return: None
-    """
-    if 'Price' in dataframe.columns:
-        fig = dataframe.plot(x='Date', y='Price')
-
-    else:
-        fig = dataframe.plot(x='Date', y='Adj Close')
-
-    plt.title(index)
-    plt.xlabel('Date');
-    plt.ylabel('Closing Price')
-
-    plt.show()
 
 
 def compute_return_since_inception(dataframe: pd.DataFrame) -> float:
@@ -154,7 +133,8 @@ def print_return_since_inception(dataframe: pd.DataFrame, name: str) -> None:
     returns_since_inception = compute_return_since_inception(dataframe)
 
     print(
-        f'The returns since inception {str(dataframe["Date"].min().date())} for "{name}" is {round(returns_since_inception * 100, 2)}%')
+        f'The returns since inception {str(dataframe["Date"].min().date())} for "{name}" is '
+        f'{round(returns_since_inception * 100, 2)}%')
 
 
 def find_intersection(list_df: List[pd.DataFrame]) -> Tuple[pd.Series, str, str]:
@@ -195,93 +175,6 @@ def intersect_dataframes(list_df: List[pd.DataFrame]) -> List[pd.DataFrame]:
     return intersection
 
 
-def create_matrix(list_df: List[pd.DataFrame]) -> np.array:
-    """
-    Creates numpy array with the intersected dataframes
-
-    :param list_df: List of pandas DataFrames, the index data
-    :return: np.array, the array with the intersected dataframes
-    """
-    intersected = intersect_dataframes(list_df)
-    array_list = []
-
-    for df in intersected:
-        array_list.append(np.array(df['perc_change']))
-    matrix = np.array(array_list)
-
-    return matrix
-
-
-def compute_correlation_matrix(list_df: List[pd.DataFrame]) -> np.array:
-    """
-    Computes the correlation matrix
-
-    :param list_df: List of pandas DataFrames, the index data
-    :return: np.array, the correlation matrix
-    """
-    matrix = create_matrix(list_df)
-    corrMatrix = np.corrcoef(matrix)
-
-    return corrMatrix
-
-
-def compute_covariance_matrix(list_df: List[pd.DataFrame]) -> np.array:
-    """
-       Computes the covariance matrix
-
-       :param list_df: List of pandas DataFrames, the index data
-       :return: np.array, the correlation matrix
-       """
-    matrix = create_matrix(list_df)
-
-    covMatrix = np.cov(matrix, bias=True)
-    return covMatrix
-
-
-def plot_correlation_matrix(list_df: List[pd.DataFrame], names: List[str]) -> None:
-    """
-    Plots the correlation matrix
-
-    :param list_df: List of pandas DataFrames, the index data
-    :param names: names: List, List of strings with the Index names
-    :return: None
-    """
-    corr = compute_correlation_matrix(list_df)
-
-    corrMatrix = pd.DataFrame(corr, columns=names, index=names)
-    if len(list_df) <= 4:
-        fig = plt.subplots(figsize=(15, 10))
-    else:
-        fig = plt.subplots(figsize=(20, 10))
-
-    sns.heatmap(corrMatrix, annot=True, fmt='g')
-    plt.title('Correlation matrix')
-
-    plt.show()
-
-
-def plot_covariance_matrix(list_df: List[pd.DataFrame], names: List[str]) -> None:
-    """
-    Plots the covariance matrix
-
-    :param list_df: List of pandas DataFrames, the index data
-    :param names: names: List, List of strings with the Index names
-    :return: None
-    """
-    cov = compute_covariance_matrix(list_df)
-
-    covMatrix = pd.DataFrame(cov, columns=names, index=names)
-    if len(list_df) <= 4:
-        fig = plt.subplots(figsize=(15, 10))
-    else:
-        fig = plt.subplots(figsize=(20, 10))
-
-    sns.heatmap(covMatrix, annot=True, fmt='g')
-    plt.title('Covariance matrix')
-
-    plt.show()
-
-
 def compute_mean_daily_returns(portfolio_dictionary: dict) -> List[float]:
     """
     Computes mean daily returns of the Indices
@@ -318,26 +211,6 @@ def compute_annualized_returns_no_intersection(portfolio_dictionary: dict) -> fl
     portfolio_returns = np.sum(mean_daily_returns * weights) * 252
 
     return portfolio_returns
-
-
-def portfolio_annualised_performance(portfolio_dictionary: dict) -> Tuple[float, float]:
-    """
-    Computes the annualized risk and return of a portfolio
-
-    :param portfolio_dictionary: dictionary, the dictionary with the Index data
-    :return: Tuple[float, float], the return and the risk (standard deviation) of the portfolio
-    """
-    cov_matrix = compute_covariance_matrix(portfolio_dictionary['frames'])
-
-    weights = np.array(portfolio_dictionary['weights'])
-
-    mean_daily_returns = compute_mean_daily_returns(portfolio_dictionary)
-
-    portfolio_returns = np.sum(mean_daily_returns * weights) * 252
-
-    portfolio_std = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights))) * np.sqrt(252)
-
-    return portfolio_returns, portfolio_std
 
 
 def random_portfolios(num_portfolios: int, portfolio: List[pd.DataFrame], names: List[str], risk_free_rate: float,
