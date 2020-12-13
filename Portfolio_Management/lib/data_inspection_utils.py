@@ -68,7 +68,9 @@ def print_risk_and_return_portfolio(portfolio_dict: dict) -> None:
     _, min_date, max_date = find_intersection(portfolio_dict['frames'])
 
     print(
-        f'The annualized return of the portfolio is {round(portfolio_returns * 100, 2)}% and the risk is {round(portfolio_std * 100, 2)}%')
+        f'The annualized return of the portfolio is {round(portfolio_returns * 100, 2)}% '
+        f'and the risk is {round(portfolio_std * 100, 2)}%'
+    )
     print('\n')
     print(f'The portfolio minimum date is {min_date} and maximum date is {max_date}')
 
@@ -127,11 +129,11 @@ def compute_correlation_matrix(list_df: List[pd.DataFrame]) -> np.array:
 
 def compute_covariance_matrix(list_df: List[pd.DataFrame]) -> np.array:
     """
-       Computes the covariance matrix
+    Computes the covariance matrix
 
-       :param list_df: List of pandas DataFrames, the index data
-       :return: np.array, the correlation matrix
-       """
+    :param list_df: List of pandas DataFrames, the index data
+    :return: np.array, the correlation matrix
+    """
     matrix = create_matrix(list_df)
 
     covMatrix = np.cov(matrix, bias=True)
@@ -158,6 +160,7 @@ def plot_covariance_matrix(list_df: List[pd.DataFrame], names: List[str]) -> Non
     plt.title('Covariance matrix')
 
     plt.show()
+
 
 def portfolio_annualised_performance(portfolio_dictionary: dict) -> Tuple[float, float]:
     """
