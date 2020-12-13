@@ -26,10 +26,10 @@ def plot_ts(dataframe: pd.DataFrame, index: int) -> None:
     :return: None
     """
     if 'Price' in dataframe.columns:
-        fig = dataframe.plot(x='Date', y='Price')
+        dataframe.plot(x='Date', y='Price')
 
     else:
-        fig = dataframe.plot(x='Date', y='Adj Close')
+        dataframe.plot(x='Date', y='Adj Close')
 
     plt.title(index)
     plt.xlabel('Date')
@@ -87,9 +87,9 @@ def plot_correlation_matrix(list_df: List[pd.DataFrame], names: List[str]) -> No
 
     corrMatrix = pd.DataFrame(corr, columns=names, index=names)
     if len(list_df) <= 4:
-        fig = plt.subplots(figsize=(15, 10))
+        plt.subplots(figsize=(15, 10))
     else:
-        fig = plt.subplots(figsize=(20, 10))
+        plt.subplots(figsize=(20, 10))
 
     sns.heatmap(corrMatrix, annot=True, fmt='g')
     plt.title('Correlation matrix')
@@ -152,9 +152,9 @@ def plot_covariance_matrix(list_df: List[pd.DataFrame], names: List[str]) -> Non
 
     covMatrix = pd.DataFrame(cov, columns=names, index=names)
     if len(list_df) <= 4:
-        fig = plt.subplots(figsize=(15, 10))
+        plt.subplots(figsize=(15, 10))
     else:
-        fig = plt.subplots(figsize=(20, 10))
+        plt.subplots(figsize=(20, 10))
 
     sns.heatmap(covMatrix, annot=True, fmt='g')
     plt.title('Covariance matrix')

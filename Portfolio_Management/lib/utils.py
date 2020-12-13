@@ -52,7 +52,7 @@ def compute_change(dataframe: pd.DataFrame) -> pd.DataFrame:
     :return: dataframe: pandas Dataframe, dataframe with computed change
     """
     if 'Price' in dataframe.columns:
-        dataframe = dataframe[['Date', 'Open', 'Price']][dataframe['Open'] != None]
+        dataframe = dataframe[['Date', 'Open', 'Price']][dataframe['Open'] is not None]
         dataframe['Open'] = dataframe['Open'].astype(float)
         dataframe['Price'] = dataframe['Price'].astype(float)
         dataframe['Change'] = dataframe['Price'] - dataframe['Open']
@@ -82,9 +82,9 @@ def compute_perc_change(dataframe: pd.DataFrame) -> pd.DataFrame:
     return dataframe
 
 
-def construct_portfolio_dictionary(dataframes_list: List[pd.DataFrame], names: List[str],
-                                   weights: Union[float, np.array],
-                                   description: List[str]) -> dict:
+def construct_portfolio_dictionary(
+    dataframes_list: List[pd.DataFrame], names: List[str], weights: Union[float, np.array], description: List[str]
+) -> dict:
     """
     Creates dictionary with the Index data, their names, their description and weights
 
@@ -94,10 +94,7 @@ def construct_portfolio_dictionary(dataframes_list: List[pd.DataFrame], names: L
     :param description: List, List of strings with the Index descriptions
     :return: dictionary
     """
-    portfolio_dict = {'names': names,
-                      'frames': dataframes_list,
-                      'weights': weights,
-                      'description': description}
+    portfolio_dict = {'names': names, 'frames': dataframes_list, 'weights': weights, 'description': description}
 
     return portfolio_dict
 
@@ -130,7 +127,8 @@ def print_return_since_inception(dataframe: pd.DataFrame, name: str) -> None:
 
     print(
         f'The returns since inception {str(dataframe["Date"].min().date())} for "{name}" is '
-        f'{round(returns_since_inception * 100, 2)}%')
+        f'{round(returns_since_inception * 100, 2)}%'
+    )
 
 
 def find_intersection(list_df: List[pd.DataFrame]) -> Tuple[pd.Series, str, str]:
@@ -207,5 +205,3 @@ def compute_annualized_returns_no_intersection(portfolio_dictionary: dict) -> fl
     portfolio_returns = np.sum(mean_daily_returns * weights) * 252
 
     return portfolio_returns
-
-
