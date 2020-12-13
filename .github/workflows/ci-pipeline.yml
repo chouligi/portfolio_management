@@ -28,7 +28,7 @@ jobs:
       # Runs a single command using the runners shell
       - name: flake8 check
         run: |
-            pip install flake8
+            pip install flake8 --user
             flake8
 
       # Runs a set of commands using the runners shell
