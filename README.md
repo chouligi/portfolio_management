@@ -27,9 +27,6 @@ Typical things you’ll find here:
   - Portfolio growth over time
   - Risk/return trade-offs
 
-> Adjust this section to match whatever you actually keep in the repo  
-> (e.g. name specific notebooks or modules if you’d like).
-
 ---
 
 ### 2. AngelCopilot Evaluation
