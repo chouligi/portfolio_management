@@ -6,10 +6,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from scipy import stats
-
+import seaborn as sns
 
 OVERALL_COL = "Overall Score (Weighted Average)"
 
+sns.set_theme(style="whitegrid")
+sns.set_context("talk", font_scale=0.9)
 
 @dataclass
 class TierComparisonResult:
@@ -129,49 +131,17 @@ def compare_tiers(company_scores: pd.DataFrame) -> TierComparisonResult:
     )
 
 
-def compute_robustness(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Compute robustness metrics per company, based on all evaluations.
-
-    Returns DataFrame with:
-      - Tier
-      - Company Name
-      - mean_score
-      - sd_score
-      - n_evals
-    """
-    scored = df.dropna(subset=[OVERALL_COL]).copy()
-
-    robustness = (
-        scored
-        .groupby(["Tier", "Company Name"])[OVERALL_COL]
-        .agg(["mean", "std", "count"])
-        .reset_index()
-        .rename(
-            columns={
-                "mean": "mean_score",
-                "std": "sd_score",
-                "count": "n_evals",
-            }
-        )
-    )
-
-    return robustness
-
-
 # ---------- Plotting utilities ---------- #
 
 
 def plot_tier_distributions(
     company_scores: pd.DataFrame,
-    ax: plt.Axes | None = None,
 ) -> plt.Axes:
     """
     Overlapping histogram of company-level mean scores for Tier A and Tier B.
     Returns the matplotlib Axes object.
     """
-    if ax is None:
-        fig, ax = plt.subplots()
+    fig, ax = plt.subplots()
 
     a = company_scores.loc[company_scores["Tier"] == "A", "overall_mean"].to_numpy()
     b = company_scores.loc[company_scores["Tier"] == "B", "overall_mean"].to_numpy()
@@ -184,40 +154,43 @@ def plot_tier_distributions(
 
     ax.set_xlabel("Overall score (company-level mean, 1–5 scale)")
     ax.set_ylabel("Density")
-    ax.set_title("AngelCopilot calibration: Tier A vs Tier B")
+    ax.set_title("AngelCopilot Score Distribution")
     ax.legend()
+
+    fig.savefig("tier_distribution.png", dpi=300, bbox_inches="tight")
 
     return ax
 
 
 def plot_robustness(
-    robustness_df: pd.DataFrame,
+    company_scores: pd.DataFrame,
     min_evals: int = 5,
-    ax: plt.Axes | None = None,
 ) -> plt.Axes | None:
     """
     Plot robustness: per-company mean ± 1 SD for companies
     with at least `min_evals` evaluations.
 
-    Returns Axes or None if no companies satisfy the criterion.
+    Uses the output of `compute_company_level_scores`:
+      - overall_mean
+      - overall_std
+      - n_evals
     """
-    subset = robustness_df[robustness_df["n_evals"] >= min_evals].copy()
+    subset = company_scores[company_scores["n_evals"] >= min_evals].copy()
     if subset.empty:
         print(f"[robustness] No companies with >= {min_evals} evaluations.")
         return None
 
-    subset = subset.sort_values("mean_score", ascending=False)
+    subset = subset.sort_values("overall_mean", ascending=False)
 
     x = np.arange(len(subset))
     labels = subset["Company Name"].tolist()
-    means = subset["mean_score"].to_numpy()
-    sds = subset["sd_score"].to_numpy()
+    means = subset["overall_mean"].to_numpy()
+    sds = subset["overall_std"].to_numpy()
     tiers = subset["Tier"].to_numpy()
 
     colors = np.where(tiers == "A", "tab:blue", "tab:orange")
 
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(10, 5))
 
     ax.errorbar(x, means, yerr=sds, fmt="none", ecolor="gray", capsize=4)
     ax.scatter(x, means, c=colors)
@@ -233,12 +206,13 @@ def plot_robustness(
     ]
     ax.legend(handles=handles)
 
+    fig.savefig("robustness_errorbars.png", dpi=300, bbox_inches="tight")
+
     return ax
 
 
 def plot_sorted_company_scores(
     company_scores: pd.DataFrame,
-    ax: plt.Axes | None = None,
 ) -> plt.Axes:
     """
     Plot all companies sorted by mean score, colored by tier.
@@ -251,8 +225,7 @@ def plot_sorted_company_scores(
 
     colors = np.where(tiers == "A", "tab:blue", "tab:orange")
 
-    if ax is None:
-        fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(10, 5))
 
     ax.bar(x, means, color=colors)
     ax.set_xticks(x)
@@ -265,6 +238,8 @@ def plot_sorted_company_scores(
         plt.Line2D([0], [0], marker="s", linestyle="", color="tab:orange", label="Tier B"),
     ]
     ax.legend(handles=handles)
+
+    fig.savefig("company_scores_sorted.png", dpi=300, bbox_inches="tight")
 
     return ax
 
