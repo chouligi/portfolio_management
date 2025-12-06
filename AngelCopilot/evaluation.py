@@ -10,8 +10,26 @@ import seaborn as sns
 
 OVERALL_COL = "Overall Score (Weighted Average)"
 
-sns.set_theme(style="whitegrid")
-sns.set_context("talk", font_scale=0.9)
+
+def set_angelcopilot_style():
+    sns.set_theme(
+        style="whitegrid",
+        context="talk",      # big enough for blog, not monstrous
+        rc={
+            "axes.spines.top": False,
+            "axes.spines.right": False,
+            "axes.titleweight": "bold",
+            "axes.labelweight": "regular",
+            "axes.grid.axis": "y",        # only horizontal gridlines
+            "grid.alpha": 0.2,
+            "legend.frameon": True,
+            "legend.framealpha": 0.9,
+        },
+    )
+
+    # Slightly smaller font than default 'talk'
+    sns.set_context("talk", font_scale=0.9)
+
 
 @dataclass
 class TierComparisonResult:
@@ -216,29 +234,54 @@ def plot_sorted_company_scores(
 ) -> plt.Axes:
     """
     Plot all companies sorted by mean score, colored by tier.
+    Horizontal bar chart with score annotations.
     """
-    df = company_scores.sort_values("overall_mean", ascending=False).copy()
-    x = np.arange(len(df))
-    labels = df["Company Name"].tolist()
+    df = company_scores.copy()
+    df = df.sort_values("overall_mean", ascending=True)
+
+    df["pretty_name"] = df["Company Name"].str.replace("_", " ")
+
     means = df["overall_mean"].to_numpy()
     tiers = df["Tier"].to_numpy()
+    labels = df["pretty_name"].tolist()
 
     colors = np.where(tiers == "A", "tab:blue", "tab:orange")
 
-    fig, ax = plt.subplots(figsize=(10, 5))
+    fig, ax = plt.subplots(figsize=(8, 5))
 
-    ax.bar(x, means, color=colors)
-    ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=45, ha="right")
-    ax.set_ylabel("Overall score (company-level mean)")
+    y_pos = np.arange(len(df))
+    bars = ax.barh(y_pos, means, color=colors)
+
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(labels)
+    ax.set_xlabel("Overall score (company-level mean)")
+    ax.set_ylabel("")
     ax.set_title("Company-level AngelCopilot scores (sorted)")
 
+    # Annotate scores
+    for bar, value in zip(bars, means):
+        ax.text(
+            value + 0.02,
+            bar.get_y() + bar.get_height() / 2,
+            f"{value:.2f}",
+            va="center",
+            ha="left",
+            fontsize=9,
+        )
+
+    # Legend outside the plot on the right
     handles = [
         plt.Line2D([0], [0], marker="s", linestyle="", color="tab:blue", label="Tier A"),
         plt.Line2D([0], [0], marker="s", linestyle="", color="tab:orange", label="Tier B"),
     ]
-    ax.legend(handles=handles)
+    ax.legend(
+        handles=handles,
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),  # ← fixed name
+        frameon=True,
+    )
 
+    plt.tight_layout()
     fig.savefig("company_scores_sorted.png", dpi=300, bbox_inches="tight")
 
     return ax
