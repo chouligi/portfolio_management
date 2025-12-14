@@ -15,7 +15,7 @@ def print_date_range(name: str, dataframe: pd.DataFrame) -> None:
     :param dataframe: pandas Dataframe, the dataframe with the index data
     :return: None
     """
-    print(f'Date range for "{name}" is from {str(dataframe["Date"].min())}' + f' to {str(dataframe["Date"].max())}')
+    print(f'Date range for "{name}" is from {str(dataframe["Date"].min())}' + f" to {str(dataframe['Date'].max())}")
 
 
 def plot_ts(dataframe: pd.DataFrame, index: int) -> None:
@@ -25,15 +25,15 @@ def plot_ts(dataframe: pd.DataFrame, index: int) -> None:
     :param index: int, the index of the dictionary
     :return: None
     """
-    if 'Price' in dataframe.columns:
-        dataframe.plot(x='Date', y='Price')
+    if "Price" in dataframe.columns:
+        dataframe.plot(x="Date", y="Price")
 
     else:
-        dataframe.plot(x='Date', y='Adj Close')
+        dataframe.plot(x="Date", y="Adj Close")
 
     plt.title(index)
-    plt.xlabel('Date')
-    plt.ylabel('Closing Price')
+    plt.xlabel("Date")
+    plt.ylabel("Closing Price")
 
     plt.show()
 
@@ -52,27 +52,27 @@ def print_length(name: str, dataframe: pd.DataFrame) -> None:
 def inspect_data(portfolio_dict: dict) -> None:
     # Print length of each dataframe
     print("############### Printing Number of Rows per index...###############")
-    for idx in range(len(portfolio_dict['names'])):
-        print_length(portfolio_dict['names'][idx], portfolio_dict['frames'][idx])
-    print('\n')
+    for idx in range(len(portfolio_dict["names"])):
+        print_length(portfolio_dict["names"][idx], portfolio_dict["frames"][idx])
+    print("\n")
     print("############### Printing Data Ranges per index...###############")
-    for idx in range(len(portfolio_dict['names'])):
-        print_date_range(portfolio_dict['names'][idx], portfolio_dict['frames'][idx])
-    print('\n')
-    for idx in range(len(portfolio_dict['names'])):
-        plot_ts(portfolio_dict['frames'][idx], portfolio_dict['description'][idx])
+    for idx in range(len(portfolio_dict["names"])):
+        print_date_range(portfolio_dict["names"][idx], portfolio_dict["frames"][idx])
+    print("\n")
+    for idx in range(len(portfolio_dict["names"])):
+        plot_ts(portfolio_dict["frames"][idx], portfolio_dict["description"][idx])
 
 
 def print_risk_and_return_portfolio(portfolio_dict: dict) -> None:
     portfolio_returns, portfolio_std = portfolio_annualised_performance(portfolio_dict)
-    _, min_date, max_date = find_intersection(portfolio_dict['frames'])
+    _, min_date, max_date = find_intersection(portfolio_dict["frames"])
 
     print(
-        f'The annualized return of the portfolio is {round(portfolio_returns * 100, 2)}% '
-        f'and the risk is {round(portfolio_std * 100, 2)}%'
+        f"The annualized return of the portfolio is {round(portfolio_returns * 100, 2)}% "
+        f"and the risk is {round(portfolio_std * 100, 2)}%"
     )
-    print('\n')
-    print(f'The portfolio minimum date is {min_date} and maximum date is {max_date}')
+    print("\n")
+    print(f"The portfolio minimum date is {min_date} and maximum date is {max_date}")
 
 
 def plot_correlation_matrix(list_df: List[pd.DataFrame], names: List[str]) -> None:
@@ -91,8 +91,8 @@ def plot_correlation_matrix(list_df: List[pd.DataFrame], names: List[str]) -> No
     else:
         plt.subplots(figsize=(20, 10))
 
-    sns.heatmap(corrMatrix, annot=True, fmt='g')
-    plt.title('Correlation matrix')
+    sns.heatmap(corrMatrix, annot=True, fmt="g")
+    plt.title("Correlation matrix")
 
     plt.show()
 
@@ -108,7 +108,7 @@ def create_matrix(list_df: List[pd.DataFrame]) -> np.array:
     array_list = []
 
     for df in intersected:
-        array_list.append(np.array(df['perc_change']))
+        array_list.append(np.array(df["perc_change"]))
     matrix = np.array(array_list)
 
     return matrix
@@ -156,8 +156,8 @@ def plot_covariance_matrix(list_df: List[pd.DataFrame], names: List[str]) -> Non
     else:
         plt.subplots(figsize=(20, 10))
 
-    sns.heatmap(covMatrix, annot=True, fmt='g')
-    plt.title('Covariance matrix')
+    sns.heatmap(covMatrix, annot=True, fmt="g")
+    plt.title("Covariance matrix")
 
     plt.show()
 
@@ -169,9 +169,9 @@ def portfolio_annualised_performance(portfolio_dictionary: dict) -> Tuple[float,
     :param portfolio_dictionary: dictionary, the dictionary with the Index data
     :return: Tuple[float, float], the return and the risk (standard deviation) of the portfolio
     """
-    cov_matrix = compute_covariance_matrix(portfolio_dictionary['frames'])
+    cov_matrix = compute_covariance_matrix(portfolio_dictionary["frames"])
 
-    weights = np.array(portfolio_dictionary['weights'])
+    weights = np.array(portfolio_dictionary["weights"])
 
     mean_daily_returns = compute_mean_daily_returns(portfolio_dictionary)
 

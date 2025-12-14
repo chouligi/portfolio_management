@@ -14,13 +14,13 @@ OVERALL_COL = "Overall Score (Weighted Average)"
 def set_angelcopilot_style():
     sns.set_theme(
         style="whitegrid",
-        context="talk",      # big enough for blog, not monstrous
+        context="talk",  # big enough for blog, not monstrous
         rc={
             "axes.spines.top": False,
             "axes.spines.right": False,
             "axes.titleweight": "bold",
             "axes.labelweight": "regular",
-            "axes.grid.axis": "y",        # only horizontal gridlines
+            "axes.grid.axis": "y",  # only horizontal gridlines
             "grid.alpha": 0.2,
             "legend.frameon": True,
             "legend.framealpha": 0.9,
@@ -88,8 +88,7 @@ def compute_company_level_scores(df: pd.DataFrame) -> pd.DataFrame:
     scored = df.dropna(subset=[OVERALL_COL]).copy()
 
     grouped = (
-        scored
-        .groupby(["Tier", "Company Name"])[OVERALL_COL]
+        scored.groupby(["Tier", "Company Name"])[OVERALL_COL]
         .agg(["mean", "std", "count"])
         .reset_index()
         .rename(

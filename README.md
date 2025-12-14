@@ -36,11 +36,10 @@ angel investing decisions.
 
 The goal is to sanity-check that the rubric:
 
-1. **Separates deal quality**  
+1. **Separates deal quality**
    Higher-quality / harder-to-access deals (Tier A, e.g. syndicate / curated)
    should receive higher overall scores than easier-to-access deals (Tier B).
 
-2. **Is reasonably robust**  
+2. **Is reasonably robust**
    Re-scoring the same company multiple times should give similar results
    (low variance compared to the signal between tiers).
-
