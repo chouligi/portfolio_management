@@ -228,6 +228,66 @@ def plot_robustness(
     return ax
 
 
+def plot_robustness_ci95(
+    company_scores: pd.DataFrame,
+    min_evals: int = 5,
+) -> plt.Axes | None:
+    """
+    Plot robustness as per-company mean ± 95% CI (confidence interval of the mean)
+    for companies with at least `min_evals` evaluations.
+
+    Uses:
+      - overall_mean  (mean of reruns)
+      - overall_std   (SD of reruns)
+      - n_evals       (number of reruns)
+    """
+    subset = company_scores[company_scores["n_evals"] >= min_evals].copy()
+    if subset.empty:
+        print(f"[robustness_ci] No companies with >= {min_evals} evaluations.")
+        return None
+
+    subset = subset.sort_values("overall_mean", ascending=False)
+
+    x = np.arange(len(subset))
+    labels = subset["Company Name"].tolist()
+    means = subset["overall_mean"].to_numpy()
+    sds = subset["overall_std"].to_numpy()
+    ns = subset["n_evals"].to_numpy()
+    tiers = subset["Tier"].to_numpy()
+
+    # --- 95% CI half-width per company ---
+    # SEM = SD / sqrt(n)
+    sem = sds / np.sqrt(ns)
+
+    # t critical value for 95% CI: t_{0.975, df=n-1}
+    tcrit = np.array([stats.t.ppf(0.975, df=n - 1) for n in ns])
+
+    ci_halfwidth = tcrit * sem
+
+    colors = np.where(tiers == "A", "tab:blue", "tab:orange")
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+
+    # Use CI half-widths as the error bars
+    ax.errorbar(x, means, yerr=ci_halfwidth, fmt="none", ecolor="gray", capsize=4)
+    ax.scatter(x, means, c=colors)
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels, rotation=45, ha="right")
+    ax.set_ylabel("Overall score (mean ± 95% CI)")
+    ax.set_title(f"Robustness of AngelCopilot scores (95% CI, n ≥ {min_evals} evals/company)")
+
+    handles = [
+        plt.Line2D([0], [0], marker="o", linestyle="", color="tab:blue", label="Tier A"),
+        plt.Line2D([0], [0], marker="o", linestyle="", color="tab:orange", label="Tier B"),
+    ]
+    ax.legend(handles=handles)
+
+    fig.savefig("robustness_ci95.png", dpi=300, bbox_inches="tight")
+
+    return ax
+
+
 def plot_sorted_company_scores(
     company_scores: pd.DataFrame,
 ) -> plt.Axes:
