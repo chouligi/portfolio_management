@@ -1,0 +1,26 @@
+{
+  "name": "investment-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "flex": "python3 scripts/fetch_ibkr_flex.py",
+    "data": "python3 scripts/fetch_ibkr_flex.py --optional && python3 scripts/build_dashboard_data.py",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
+    "lucide-react": "^0.468.0",
+    "recharts": "^3.8.1",
+    "vite": "^8.0.16",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "typescript": "^5.7.2"
+  }
+}

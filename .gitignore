@@ -4,3 +4,21 @@
 .ipynb_checkpoints
 .idea
 venv/
+.env/
+
+# Private portfolio inputs and generated dashboard data
+Investment Dashboard/Transaction Data/
+Investment Dashboard/public/data/
+Investment Dashboard/.env*
+!Investment Dashboard/.env.example
+Investment Dashboard/*credentials*.json
+Investment Dashboard/*client_secret*.json
+Investment Dashboard/*token*.json
+Investment Dashboard/*.pem
+Investment Dashboard/*.key
+Investment Dashboard/node_modules/
+Investment Dashboard/dist/
+Investment Dashboard/*.tsbuildinfo
+Investment Dashboard/vite.config.js
+Investment Dashboard/vite.config.d.ts
+Investment Dashboard/scripts/__pycache__/
